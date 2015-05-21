@@ -382,7 +382,7 @@ describe('Transaction', function() {
         return transaction.serialize();
       }).to.throw(errors.Transaction.FeeError.Different);
     });
-    it('checks output amount before fee errors', function() {
+    it('checks "output greater than input" or "non-standard fees"', function() {
       var transaction = new Transaction();
       transaction.from(simpleUtxoWith1BTC);
       transaction
@@ -393,6 +393,18 @@ describe('Transaction', function() {
       expect(function() {
         return transaction.serialize();
       }).to.throw(errors.Transaction.InvalidOutputAmountSum);
+    });
+    it('will throw fee error with disableMoreOutputThanInput enabled (but not triggered)', function() {
+      var transaction = new Transaction();
+      transaction.from(simpleUtxoWith1BTC);
+      transaction
+        .to(toAddress, 90000000)
+        .change(changeAddress)
+        .fee(10000000);
+
+      expect(function() {
+        return transaction.serialize({disableMoreOutputThanInput: true});
+      }).to.throw(errors.Transaction.FeeError.TooLarge);
     });
     describe('skipping checks', function() {
       var buildSkipTest = function(builder, check, expectedError) {
